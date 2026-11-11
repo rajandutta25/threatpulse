@@ -1,0 +1,68 @@
+# ThreatPulse configuration. Copy to config.toml. Put API keys in .env, not here.
+
+[general]
+db_path = "data/threatpulse.db"
+lookback_days = 7          # advisories older than this are not ingested
+http_timeout = 30
+
+# Your technology stack. Matching advisories get +15 score, a "YOUR STACK" flag,
+# a P1 triage action and tighter patch deadlines.
+[watchlist]
+vendors  = ["fortinet", "cisco", "microsoft", "palo alto", "f5", "symantec", "broadcom", "vmware", "citrix", "ivanti"]
+products = ["fortigate", "fortios", "asa", "ftd", "big-ip", "pan-os", "globalprotect", "exchange", "sharepoint", "esxi", "netscaler"]
+
+# Disable any collector with enabled = false
+[sources.cisa_kev]
+enabled = true
+[sources.rss]
+enabled = true
+[sources.otx]
+enabled = true
+[sources.threatfox]
+enabled = true
+[sources.urlhaus]
+enabled = true
+[sources.feodo]
+enabled = true
+
+# Advisory feeds. full_text = true fetches the article page for deeper IOC extraction.
+[[rss.feeds]]
+name = "CISA Advisories"
+url = "https://www.cisa.gov/cybersecurity-advisories/all.xml"
+full_text = true
+[[rss.feeds]]
+name = "Unit 42"
+url = "https://unit42.paloaltonetworks.com/feed/"
+full_text = true
+[[rss.feeds]]
+name = "Cisco Talos"
+url = "https://blog.talosintelligence.com/rss/"
+full_text = true
+[[rss.feeds]]
+name = "The DFIR Report"
+url = "https://thedfirreport.com/feed/"
+full_text = true
+[[rss.feeds]]
+name = "SANS ISC"
+url = "https://isc.sans.edu/rssfeed_full.xml"
+full_text = false
+[[rss.feeds]]
+name = "Microsoft Security Blog"
+url = "https://www.microsoft.com/en-us/security/blog/feed/"
+full_text = false
+[[rss.feeds]]
+name = "BleepingComputer"
+url = "https://www.bleepingcomputer.com/feed/"
+full_text = false
+[[rss.feeds]]
+name = "The Hacker News"
+url = "https://feeds.feedburner.com/TheHackersNews"
+full_text = false
+
+# Never extract / export these (suffix match). Add your own domains and CDNs.
+[allowlist]
+domains = ["yourcompany.com"]
+cidrs = []
+
+[notify]
+min_score = 75             # webhook alert threshold

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ThreatPulse — Threat Intelligence</title>
+<style>
+:root{--bg:#0b0f14;--panel:#121821;--panel2:#18202b;--line:#243042;--text:#d7e0ea;--mut:#8394a8;
+--acc:#3fb6ff;--p1:#ff4d5e;--p2:#ff9f43;--p3:#f5d547;--p4:#6c7a89;--ok:#2ecc71;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+.logo{font-weight:700;font-size:17px;letter-spacing:.3px}.logo b{color:var(--acc)}
+nav{display:flex;gap:4px}nav button{background:none;border:0;color:var(--mut);padding:8px 12px;border-radius:6px;cursor:pointer;font:inherit}
+nav button.on,nav button:hover{background:var(--panel2);color:var(--text)}
+.sp{flex:1}input,select{background:var(--bg);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:6px;font:inherit}
+.btn{background:var(--acc);color:#001523;border:0;padding:8px 14px;border-radius:6px;font-weight:600;cursor:pointer}
+.btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;padding:16px 20px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.tile .n{font-size:24px;font-weight:700}.tile .l{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+main{padding:0 20px 20px}.view{display:none}.view.on{display:block}
+.split{display:grid;grid-template-columns:minmax(360px,38%) 1fr;gap:16px;height:calc(100vh - 190px)}
+.list,.detail{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto}
+.filters{display:flex;gap:8px;padding:10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);flex-wrap:wrap}
+.filters input[type=search]{flex:1;min-width:140px}
+.item{padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;display:grid;grid-template-columns:46px 1fr;gap:10px}
+.item:hover,.item.on{background:var(--panel2)}.item .t{font-weight:600}.meta{color:var(--mut);font-size:12px}
+.score{border-radius:8px;text-align:center;font-weight:700;padding:6px 0;height:fit-content}
+.s-c{background:#3a0d14;color:var(--p1)}.s-h{background:#3a240d;color:var(--p2)}.s-m{background:#33300d;color:var(--p3)}.s-l{background:#1d2530;color:var(--mut)}
+.chip{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;background:var(--panel2);border:1px solid var(--line);margin:2px 3px 0 0;color:var(--mut)}
+.chip.stack{background:#0d2a3a;color:var(--acc);border-color:#1b4a63}.chip.kev{background:#3a0d14;color:var(--p1);border-color:#5c1520}
+.detail{padding:18px 22px}.detail h2{margin:0 0 6px;font-size:19px}h3{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--mut);margin:22px 0 8px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mut);font-weight:500;font-size:12px}td.mono,.mono{font-family:var(--mono);font-size:12px;word-break:break-all}
+.pri{font-weight:700;font-size:12px;padding:2px 6px;border-radius:4px}.P1{background:var(--p1);color:#fff}.P2{background:var(--p2);color:#201000}.P3{background:var(--p3);color:#201d00}.P4{background:var(--p4);color:#fff}
+.act{display:grid;grid-template-columns:22px 34px 1fr auto;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);align-items:start}
+.act.done .a{text-decoration:line-through;color:var(--mut)}.act .d{color:var(--mut);font-size:12px}
+.tabs{display:flex;gap:4px;margin-bottom:-1px}.tabs button{background:var(--bg);border:1px solid var(--line);border-bottom:0;color:var(--mut);padding:6px 12px;border-radius:6px 6px 0 0;cursor:pointer;font:inherit;font-size:12px}
+.tabs button.on{background:var(--panel2);color:var(--text)}
+pre{background:var(--panel2);border:1px solid var(--line);border-radius:0 6px 6px 6px;padding:12px;overflow:auto;max-height:340px;font:12px/1.5 var(--mono);margin:0;white-space:pre-wrap;word-break:break-all}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.empty{color:var(--mut);padding:40px;text-align:center}.bar{height:6px;background:var(--panel2);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.toast{position:fixed;bottom:20px;right:20px;background:var(--panel2);border:1px solid var(--line);padding:10px 14px;border-radius:8px;display:none}
+@media(max-width:1000px){.tiles{grid-template-columns:repeat(3,1fr)}.split{grid-template-columns:1fr;height:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Threat<b>Pulse</b></div>
+  <nav id="nav">
+    <button data-v="advisories" class="on">Advisories</button>
+    <button data-v="indicators">Indicators</button>
+    <button data-v="vulns">Exploited CVEs</button>
+    <button data-v="feeds">Feeds &amp; Export</button>
+  </nav>
+  <div class="sp"></div>
+  <form id="lookupForm" class="row"><input id="lookup" placeholder="Look up IP / domain / hash / CVE" size="30"><button class="btn ghost">Lookup</button></form>
+  <button class="btn" id="refresh">Refresh feeds</button>
+</header>
+<section class="tiles" id="tiles"></section>
+<main>
+  <div class="view on" id="v-advisories">
+    <div class="split">
+      <div class="list">
+        <div class="filters">
+          <input type="search" id="q" placeholder="Search title, CVE, malware, tag…">
+          <select id="minScore"><option value="0">All scores</option><option value="50">≥ 50</option><option value="70">≥ 70</option><option value="85">≥ 85</option></select>
+          <select id="days"><option value="3">3 days</option><option value="7" selected>7 days</option><option value="30">30 days</option><option value="90">90 days</option></select>
+          <label class="row meta"><input type="checkbox" id="mine"> My stack</label>
+        </div>
+        <div id="advList"></div>
+      </div>
+      <div class="detail" id="advDetail"><div class="empty">Select an advisory</div></div>
+    </div>
+  </div>
+  <div class="view" id="v-indicators">
+    <div class="card row">
+      <input type="search" id="iq" placeholder="Filter value"><select id="it"><option value="">All types</option>
+      <option>ipv4</option><option>domain</option><option>url</option><option>sha256</option><option>sha1</option><option>md5</option><option>email</option></select>
+      <input id="im" placeholder="Malware family"><select id="is"><option value="0">Any score</option><option value="60">≥ 60</option><option value="80">≥ 80</option></select>
+    </div>
+    <div class="card" id="indTable"></div>
+  </div>
+  <div class="view" id="v-vulns"><div class="card" id="vulnTable"></div></div>
+  <div class="view" id="v-feeds">
+    <div class="card"><h3 style="margin-top:0">Feed health</h3><div id="feedTable"></div></div>
+    <div class="card"><h3 style="margin-top:0">Exports &amp; integrations</h3>
+      <table><tr><th>Format</th><th>Endpoint</th><th>Use with</th></tr>
+      <tr><td>STIX 2.1 bundle</td><td class="mono"><a href="/api/export/stix" target="_blank">/api/export/stix?min_score=60</a></td><td>MISP, OpenCTI, Sentinel TI, any TIP</td></tr>
+      <tr><td>EDL — IPs</td><td class="mono"><a href="/api/export/edl/ipv4" target="_blank">/api/export/edl/ipv4</a></td><td>PAN-OS EDL, FortiGate threat feed, Check Point</td></tr>
+      <tr><td>EDL — domains</td><td class="mono"><a href="/api/export/edl/domain" target="_blank">/api/export/edl/domain</a></td><td>DNS RPZ / sinkhole, firewall</td></tr>
+      <tr><td>EDL — URLs</td><td class="mono"><a href="/api/export/edl/url" target="_blank">/api/export/edl/url</a></td><td>Secure web proxy, PAN URL list</td></tr>
+      <tr><td>EDL — SHA256</td><td class="mono"><a href="/api/export/edl/sha256" target="_blank">/api/export/edl/sha256</a></td><td>EDR custom indicators</td></tr>
+      <tr><td>Suricata rules</td><td class="mono"><a href="/api/export/suricata" target="_blank">/api/export/suricata</a></td><td>Suricata / Security Onion</td></tr>
+      <tr><td>CSV</td><td class="mono"><a href="/api/export/csv" target="_blank">/api/export/csv</a></td><td>SIEM lookup tables, spreadsheets</td></tr>
+      <tr><td>REST API docs</td><td class="mono"><a href="/docs" target="_blank">/docs</a></td><td>SOAR playbooks, automation</td></tr></table>
+    </div>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const api = async (p, o) => { const r = await fetch(p, o); if (!r.ok) throw new Error((await r.json().catch(()=>({}))).detail || r.status); return r.json(); };
+const sc = s => s >= 85 ? "s-c" : s >= 70 ? "s-h" : s >= 50 ? "s-m" : "s-l";
+const toast = m => { const t = $("#toast"); t.textContent = m; t.style.display = "block"; setTimeout(() => t.style.display = "none", 2500); };
+const fmt = d => d ? d.replace("T", " ").slice(0, 16) : "";
+let done = {}; try { done = JSON.parse(localStorage.getItem("tp_done") || "{}"); } catch (e) {}
+const saveDone = () => { try { localStorage.setItem("tp_done", JSON.stringify(done)); } catch (e) {} };
+
+async function stats() {
+  const s = await api("/api/stats");
+  const t = [["Advisories", s.advisories], ["Score ≥ 75", s.critical], ["Your stack", s.relevant],
+             ["Indicators", s.indicators], ["Known exploited CVEs", s.kev], ["KEV w/ ransomware", s.kev_ransomware]];
+  $("#tiles").innerHTML = t.map(([l, n]) => `<div class="tile"><div class="n">${n.toLocaleString()}</div><div class="l">${l}</div></div>`).join("");
+  $("#feedTable").innerHTML = `<table><tr><th>Source</th><th>Status</th><th>Last run</th><th>Advisories</th><th>Indicators</th><th>Message</th></tr>` +
+    s.sources.map(r => `<tr><td>${esc(r.source)}</td><td style="color:${r.status === "ok" ? "var(--ok)" : "var(--p1)"}">${esc(r.status)}</td><td>${fmt(r.finished)}</td><td>${r.advisories ?? ""}</td><td>${r.indicators ?? ""}</td><td class="meta">${esc(r.message)}</td></tr>`).join("") + "</table>" +
+    (s.top_malware.length ? `<h3>Most active malware families</h3>` + s.top_malware.map(m => `<div class="row" style="margin:4px 0"><span style="width:160px">${esc(m.malware)}</span><div class="bar" style="flex:1"><i style="width:${100 * m.n / s.top_malware[0].n}%"></i></div><span class="meta">${m.n}</span></div>`).join("") : "");
+  $("#refresh").textContent = s.refresh.running ? "Refreshing…" : "Refresh feeds";
+}
+
+let current = null;
+async function loadAdvisories() {
+  const p = new URLSearchParams({ q: $("#q").value, min_score: $("#minScore").value, days: $("#days").value, relevant: $("#mine").checked });
+  const rows = await api("/api/advisories?" + p);
+  $("#advList").innerHTML = rows.length ? rows.map(a => `
+    <div class="item ${a.id === current ? "on" : ""}" data-id="${esc(a.id)}">
+      <div class="score ${sc(a.score)}">${Math.round(a.score)}</div>
+      <div><div class="t">${esc(a.title)}</div>
+      <div class="meta">${esc(a.source)} · ${fmt(a.published)} · ${a.ioc_count} IOCs</div>
+      <div>${a.relevant ? '<span class="chip stack">YOUR STACK</span>' : ""}${a.tags.includes("exploited-in-the-wild") ? '<span class="chip kev">EXPLOITED</span>' : ""}${a.cves.slice(0, 3).map(c => `<span class="chip">${esc(c)}</span>`).join("")}${a.malware.slice(0, 2).map(m => `<span class="chip">${esc(m)}</span>`).join("")}</div></div>
+    </div>`).join("") : `<div class="empty">No advisories match. Try a wider time range or run a refresh.</div>`;
+  document.querySelectorAll(".item").forEach(el => el.onclick = () => showAdvisory(el.dataset.id));
+  if (!current && rows[0]) showAdvisory(rows[0].id);
+}
+
+async function showAdvisory(id) {
+  current = id;
+  document.querySelectorAll(".item").forEach(el => el.classList.toggle("on", el.dataset.id === id));
+  const a = await api("/api/advisories/" + encodeURIComponent(id));
+  const det = Object.entries(a.detections).filter(([, v]) => v);
+  const labels = { splunk: "Splunk SPL", kql: "Defender / Sentinel KQL", chronicle_yaral: "Google SecOps YARA-L", suricata: "Suricata", sigma: "Sigma" };
+  $("#advDetail").innerHTML = `
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div style="flex:1"><h2>${esc(a.title)}</h2>
+      <div class="meta">${esc(a.source)} · published ${fmt(a.published)} · severity ${esc(a.severity)} · <a href="${esc(a.url)}" target="_blank" rel="noopener">source ↗</a></div>
+      <div>${a.relevant ? '<span class="chip stack">MATCHES YOUR WATCHLIST</span>' : ""}${a.tags.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div></div>
+      <div class="score ${sc(a.score)}" style="font-size:22px;padding:10px 14px">${Math.round(a.score)}</div>
+    </div>
+    <p>${esc(a.summary)}</p>
+    <h3>Actions (${a.actions.length})</h3>
+    ${a.actions.map((x, i) => { const k = id + ":" + i; return `<div class="act ${done[k] ? "done" : ""}"><input type="checkbox" data-k="${esc(k)}" ${done[k] ? "checked" : ""}><span class="pri ${x.priority}">${x.priority}</span><div><div class="a"><b>${esc(x.category)}</b> — ${esc(x.action)}</div><div class="d">${esc(x.detail)}</div></div><div class="meta" style="text-align:right">${esc(x.owner)}<br>${x.due ? "due " + esc(x.due) : ""}</div></div>`; }).join("")}
+    ${a.vulns.length ? `<h3>Vulnerabilities</h3><table><tr><th>CVE</th><th>Product</th><th>CVSS</th><th>EPSS</th><th>KEV</th><th>Risk</th></tr>${a.vulns.map(v => `<tr><td class="mono"><a href="https://nvd.nist.gov/vuln/detail/${esc(v.cve)}" target="_blank">${esc(v.cve)}</a></td><td>${esc([v.vendor, v.product].filter(Boolean).join(" "))}</td><td>${v.cvss ?? "–"}</td><td>${v.epss != null ? (v.epss * 100).toFixed(1) + "%" : "–"}</td><td>${v.kev ? `<span class="chip kev">KEV${v.ransomware ? " · ransomware" : ""}</span><div class="meta">due ${esc(v.kev_due)}</div>` : "–"}</td><td><b>${Math.round(v.risk)}</b></td></tr>`).join("")}</table>` : ""}
+    <h3>Indicators (${a.indicators.length})</h3>
+    ${a.indicators.length ? `<div class="row" style="margin-bottom:6px"><button class="btn ghost" id="cpIoc">Copy all</button><button class="btn ghost" id="cpDef">Copy defanged</button><a class="btn ghost" href="/api/advisories/${encodeURIComponent(id)}/stix" target="_blank">STIX 2.1</a></div>
+    <table><tr><th>Type</th><th>Value</th><th>Score</th><th>Malware</th><th>Sources</th></tr>${a.indicators.slice(0, 300).map(i => `<tr><td>${esc(i.type)}</td><td class="mono">${esc(i.value)}</td><td>${Math.round(i.score)}</td><td>${esc(i.malware)}</td><td class="meta">${esc(i.sources.join(", "))}</td></tr>`).join("")}</table>` : `<div class="meta">No IOCs extracted for this advisory.</div>`}
+    ${det.length ? `<h3>Detections &amp; hunting queries</h3><div class="tabs">${det.map(([k], i) => `<button data-t="${k}" class="${i ? "" : "on"}">${labels[k]}</button>`).join("")}<span class="sp"></span><button id="cpDet">Copy</button></div><pre id="detPre"></pre>` : ""}`;
+  document.querySelectorAll(".act input").forEach(cb => cb.onchange = () => { done[cb.dataset.k] = cb.checked; saveDone(); cb.parentElement.classList.toggle("done", cb.checked); });
+  const copy = t => navigator.clipboard.writeText(t).then(() => toast("Copied"));
+  if ($("#cpIoc")) { $("#cpIoc").onclick = () => copy(a.indicators.map(i => i.value).join("\n")); $("#cpDef").onclick = () => copy(a.indicators.map(i => i.value.replace(/http/g, "hxxp").replace(/\./g, "[.]")).join("\n")); }
+  if (det.length) {
+    const show = k => { $("#detPre").textContent = a.detections[k]; document.querySelectorAll(".tabs button[data-t]").forEach(b => b.classList.toggle("on", b.dataset.t === k)); $("#cpDet").onclick = () => copy(a.detections[k]); };
+    document.querySelectorAll(".tabs button[data-t]").forEach(b => b.onclick = () => show(b.dataset.t));
+    show(det[0][0]);
+  }
+}
+
+async function loadIndicators() {
+  const p = new URLSearchParams({ q: $("#iq").value, type: $("#it").value, malware: $("#im").value, min_score: $("#is").value, limit: 1000 });
+  const rows = await api("/api/indicators?" + p);
+  $("#indTable").innerHTML = `<div class="meta" style="margin-bottom:8px">${rows.length} shown (max 1000)</div><table><tr><th>Type</th><th>Value</th><th>Score</th><th>Malware</th><th>Threat</th><th>Sources</th><th>Last seen</th></tr>` +
+    rows.map(i => `<tr><td>${esc(i.type)}</td><td class="mono">${i.reference ? `<a href="${esc(i.reference)}" target="_blank" rel="noopener">${esc(i.value)}</a>` : esc(i.value)}</td><td>${Math.round(i.score)}</td><td>${esc(i.malware)}</td><td>${esc(i.threat_type)}</td><td class="meta">${esc(i.sources.join(", "))}</td><td class="meta">${fmt(i.last_seen)}</td></tr>`).join("") + "</table>";
+}
+
+async function loadVulns() {
+  const rows = await api("/api/vulns?kev=true&limit=500");
+  $("#vulnTable").innerHTML = `<div class="meta" style="margin-bottom:8px">CISA KEV entries ranked by risk (CVSS × EPSS × exploitation × ransomware use)</div><table><tr><th>Risk</th><th>CVE</th><th>Vendor / product</th><th>CVSS</th><th>EPSS</th><th>Added</th><th>Due</th><th>Ransomware</th></tr>` +
+    rows.map(v => `<tr><td><span class="score ${sc(v.risk)}" style="padding:2px 8px">${Math.round(v.risk)}</span></td><td class="mono"><a href="https://nvd.nist.gov/vuln/detail/${esc(v.cve)}" target="_blank">${esc(v.cve)}</a></td><td>${esc(v.vendor)} ${esc(v.product)}<div class="meta">${esc((v.description || "").slice(0, 140))}</div></td><td>${v.cvss ?? "–"}</td><td>${v.epss != null ? (v.epss * 100).toFixed(1) + "%" : "–"}</td><td>${esc(v.kev_added)}</td><td>${esc(v.kev_due)}</td><td>${v.ransomware ? '<span class="chip kev">known</span>' : ""}</td></tr>`).join("") + "</table>";
+}
+
+const views = { advisories: loadAdvisories, indicators: loadIndicators, vulns: loadVulns, feeds: stats };
+document.querySelectorAll("#nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + b.dataset.v));
+  views[b.dataset.v]();
+});
+let deb; const debounce = f => () => { clearTimeout(deb); deb = setTimeout(f, 250); };
+["#q"].forEach(s => $(s).oninput = debounce(loadAdvisories)); ["#minScore", "#days", "#mine"].forEach(s => $(s).onchange = loadAdvisories);
+["#iq", "#im"].forEach(s => $(s).oninput = debounce(loadIndicators)); ["#it", "#is"].forEach(s => $(s).onchange = loadIndicators);
+$("#refresh").onclick = async () => { try { await api("/api/refresh", { method: "POST" }); toast("Refresh started — collecting feeds"); } catch (e) { toast("Refresh already running"); } const iv = setInterval(async () => { await stats(); if (!(await api("/api/health")).running) { clearInterval(iv); loadAdvisories(); toast("Feeds updated"); } }, 3000); };
+$("#lookupForm").onsubmit = async e => {
+  e.preventDefault();
+  try {
+    const r = await api("/api/lookup?value=" + encodeURIComponent($("#lookup").value));
+    const advs = r.advisories || [];
+    const head = r.type === "cve" ? (r.vuln ? `${r.value} — risk ${Math.round(r.vuln.risk)}${r.vuln.kev ? " · KNOWN EXPLOITED" : ""}` : `${r.value} — not in database`)
+      : r.found ? `${r.type} ${r.value} — MALICIOUS (score ${Math.round(r.indicator.score)}, ${esc(r.indicator.malware || r.indicator.threat_type || "")}) · sources: ${r.indicator.sources.join(", ")}` : `${r.type} ${r.value} — not found in any feed`;
+    $("#advDetail").innerHTML = `<h2>Lookup</h2><p class="mono">${esc(head)}</p>${advs.length ? "<h3>Related advisories</h3>" + advs.map(x => `<div class="item" data-id="${esc(x.id)}"><div class="score ${sc(x.score)}">${Math.round(x.score)}</div><div><div class="t">${esc(x.title)}</div><div class="meta">${esc(x.source)} · ${fmt(x.published)}</div></div></div>`).join("") : ""}`;
+    document.querySelectorAll("#advDetail .item").forEach(el => el.onclick = () => showAdvisory(el.dataset.id));
+    document.querySelector('#nav button[data-v="advisories"]').click();
+  } catch (err) { toast("Lookup: " + err.message); }
+};
+stats(); loadAdvisories(); setInterval(stats, 60000);
+</script>
+</body>
+</html>
