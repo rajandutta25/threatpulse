@@ -53,7 +53,7 @@ jobs:
           key: tpdb-${{ github.run_id }}
 
       - name: Build site
-        run: python -m threatpulse build-site -o site --days 30 --repo-url "${{ github.server_url }}/${{ github.repository }}"
+        run: python -m threatpulse build-site -o site --days 30 --feed-min-score 70 --repo-url "${{ github.server_url }}/${{ github.repository }}"
 
       - uses: actions/upload-pages-artifact@v3
         with:
