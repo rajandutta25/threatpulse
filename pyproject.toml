@@ -1,0 +1,28 @@
+[project]
+name = "threatpulse"
+version = "1.0.0"
+description = "Open-source threat intelligence platform: advisories, scored IOCs, action plans and detections"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+dependencies = ["fastapi>=0.110", "uvicorn>=0.29", "httpx>=0.27"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "stix2>=3.0"]
+
+[project.scripts]
+threatpulse = "threatpulse.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["threatpulse"]
+
+[tool.setuptools.package-data]
+threatpulse = ["static/*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
