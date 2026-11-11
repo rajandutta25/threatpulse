@@ -21,6 +21,11 @@ def main(argv=None):
     s = sub.add_parser("serve", help="run API + dashboard")
     s.add_argument("--host", default="0.0.0.0")
     s.add_argument("--port", type=int, default=8080)
+    b = sub.add_parser("build-site", help="build a static website (GitHub Pages) from the database")
+    b.add_argument("-o", "--output", default="site")
+    b.add_argument("--days", type=int, default=30)
+    b.add_argument("--feed-min-score", type=float, default=60)
+    b.add_argument("--repo-url", default="")
     sub.add_parser("demo", help="load offline sample data (clearly labelled SAMPLE) for a quick tour")
     t = sub.add_parser("top", help="print top advisories with actions")
     t.add_argument("-n", type=int, default=10)
@@ -53,6 +58,9 @@ def main(argv=None):
             cfg.watch_vendors = ["fortinet", "cisco", "microsoft", "f5", "palo alto"]
         print(json.dumps(pipeline.run(cfg, db, FixtureHTTP()), indent=2))
         print("\nSample data loaded. Run: python -m threatpulse serve")
+    elif a.cmd == "build-site":
+        from .sitegen import build
+        print(json.dumps(build(db, a.output, a.days, feed_min_score=a.feed_min_score, repo_url=a.repo_url), indent=2))
     elif a.cmd == "top":
         for adv in db.q("SELECT * FROM advisories ORDER BY score DESC LIMIT ?", (a.n,)):
             flag = " [YOUR STACK]" if adv["relevant"] else ""

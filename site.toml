@@ -1,0 +1,10 @@
+# Config used by the public GitHub Pages build (.github/workflows/pages.yml).
+# No watchlist here: the public site ranks threats for everyone, not one organisation.
+[general]
+db_path = "data/threatpulse.db"
+lookback_days = 14
+retention_days = 60
+http_timeout = 30
+
+[notify]
+min_score = 101   # no webhook alerts from the public build

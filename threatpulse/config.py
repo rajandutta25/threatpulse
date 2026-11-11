@@ -31,6 +31,7 @@ DEFAULT_ALLOW_DOMAINS = [
 class Config:
     db_path: str = "data/threatpulse.db"
     lookback_days: int = 7
+    retention_days: int = 90
     user_agent: str = "ThreatPulse/1.0 (+https://github.com/your-org/threatpulse)"
     http_timeout: int = 30
     watch_vendors: list[str] = field(default_factory=list)
@@ -59,6 +60,7 @@ def load_config(path: str | None = None) -> Config:
         g = data.get("general", {})
         cfg.db_path = g.get("db_path", cfg.db_path)
         cfg.lookback_days = int(g.get("lookback_days", cfg.lookback_days))
+        cfg.retention_days = int(g.get("retention_days", cfg.retention_days))
         cfg.user_agent = g.get("user_agent", cfg.user_agent)
         cfg.http_timeout = int(g.get("http_timeout", cfg.http_timeout))
         w = data.get("watchlist", {})

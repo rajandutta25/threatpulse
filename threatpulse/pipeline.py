@@ -109,6 +109,18 @@ def notify(cfg: Config, db: DB, http) -> int:
     return sent
 
 
+def prune(db: DB, keep_days: int = 90) -> int:
+    """Drop advisories and indicators not seen for keep_days so long-running instances stay small."""
+    cut = f"-{keep_days} days"
+    n = db.conn.execute("DELETE FROM advisories WHERE replace(published,'T',' ') < datetime('now', ?)", (cut,)).rowcount
+    n += db.conn.execute("DELETE FROM indicators WHERE replace(last_seen,'T',' ') < datetime('now', ?)", (cut,)).rowcount
+    db.conn.execute("DELETE FROM advisory_indicators WHERE advisory_id NOT IN (SELECT id FROM advisories) "
+                    "OR indicator_id NOT IN (SELECT id FROM indicators)")
+    db.conn.execute("DELETE FROM runs WHERE replace(finished,'T',' ') < datetime('now', '-14 days')")
+    db.commit()
+    return n
+
+
 def run(cfg: Config, db: DB, http, only: list[str] | None = None) -> dict:
     summary = {}
     for cls in FEED_COLLECTORS:
@@ -128,6 +140,7 @@ def run(cfg: Config, db: DB, http, only: list[str] | None = None) -> dict:
             db.log_run(c.name, started, "error", message=str(e)[:500])
             summary[c.name] = f"error: {e}"
             log.exception("collector %s failed", c.name)
+    summary["pruned"] = prune(db, cfg.retention_days)
     enrich(cfg, db, http)
     summary["correlated_links"] = correlate(db, cfg)
     rescore(db, cfg)

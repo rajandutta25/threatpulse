@@ -1,0 +1,70 @@
+name: Publish threat intel site
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"      # every 3 hours
+  workflow_dispatch:             # "Run workflow" button
+  push:
+    branches: [main]
+    paths: ["threatpulse/**", "site.toml", ".github/workflows/pages.yml"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TP_CONFIG: site.toml
+      TP_OTX_KEY: ${{ secrets.TP_OTX_KEY }}
+      TP_ABUSECH_KEY: ${{ secrets.TP_ABUSECH_KEY }}
+      TP_NVD_KEY: ${{ secrets.TP_NVD_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      # The database persists between runs via the Actions cache, so history accumulates.
+      - name: Restore database
+        uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: tpdb-${{ github.run_id }}
+          restore-keys: tpdb-
+
+      - name: Collect feeds
+        run: python -m threatpulse collect
+
+      - name: Save database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data
+          key: tpdb-${{ github.run_id }}
+
+      - name: Build site
+        run: python -m threatpulse build-site -o site --days 30 --repo-url "${{ github.server_url }}/${{ github.repository }}"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

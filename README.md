@@ -1,5 +1,10 @@
 # ThreatPulse
 
+[![CI](https://github.com/rajandutta25/threatpulse/actions/workflows/ci.yml/badge.svg)](https://github.com/rajandutta25/threatpulse/actions/workflows/ci.yml)
+[![Publish](https://github.com/rajandutta25/threatpulse/actions/workflows/pages.yml/badge.svg)](https://github.com/rajandutta25/threatpulse/actions/workflows/pages.yml)
+
+**🌐 Live site: https://rajandutta25.github.io/threatpulse/**: browse the latest advisories, IOCs, exploited CVEs and detections, or pull the public blocklists. The site is rebuilt every 3 hours.
+
 **ThreatPulse is an open-source threat intelligence platform you host yourself.** It collects the latest attacks, exploited vulnerabilities and IOCs from free government, vendor and community feeds. It ranks them by risk to *your* environment and turns each advisory into a prioritized action list with ready-to-deploy detections.
 
 ```
@@ -52,6 +57,24 @@ docker compose up -d --build              # auto-refreshes every TP_REFRESH_MINU
 ```
 
 Or schedule with cron: `0 * * * * cd /opt/threatpulse && python -m threatpulse collect`.
+
+## Public website (GitHub Pages)
+
+`.github/workflows/pages.yml` runs every 3 hours. It collects the feeds, keeps history in the Actions cache, builds a static site with `python -m threatpulse build-site` and deploys it to GitHub Pages. There is no server to run.
+
+Public feed URLs (updated with every build):
+
+| Feed | URL |
+|---|---|
+| IPv4 blocklist | `https://rajandutta25.github.io/threatpulse/feeds/ipv4.txt` |
+| Domain blocklist | `https://rajandutta25.github.io/threatpulse/feeds/domain.txt` |
+| URL blocklist | `https://rajandutta25.github.io/threatpulse/feeds/url.txt` |
+| SHA256 / MD5 | `.../feeds/sha256.txt`, `.../feeds/md5.txt` |
+| STIX 2.1 | `.../feeds/stix.json` |
+| Suricata | `.../feeds/suricata.rules` |
+| CSV | `.../feeds/iocs.csv` |
+
+To run your own copy: fork the repo, then go to **Settings → Pages → Source: GitHub Actions**. Optionally add the repository secrets `TP_OTX_KEY`, `TP_ABUSECH_KEY` and `TP_NVD_KEY`, then run the *Publish threat intel site* workflow. Note that GitHub pauses scheduled workflows after 60 days without repository activity.
 
 ## API
 

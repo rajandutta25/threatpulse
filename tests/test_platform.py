@@ -134,3 +134,26 @@ def test_api(loaded):
     assert c.get("/api/export/suricata?min_score=0").text.startswith("# ThreatPulse")
     assert c.get("/api/export/stix?min_score=0").json()["type"] == "bundle"
     assert c.get("/").status_code == 200
+
+
+def test_static_site(loaded, tmp_path):
+    from threatpulse.sitegen import build
+    _, db, _ = loaded
+    r = build(db, str(tmp_path / "site"), repo_url="https://github.com/x/y")
+    s = tmp_path / "site"
+    assert r["advisories"] == 5 and (s / "index.html").read_text().count("window.TP_STATIC=true") == 1
+    meta = json.loads((s / "data" / "meta.json").read_text())
+    assert meta["repo"] == "https://github.com/x/y" and meta["stats"]["kev"] >= 2
+    advs = json.loads((s / "data" / "advisories.json").read_text())
+    for a in advs:
+        d = json.loads((s / "data" / "advisory" / f"{a['id']}.json").read_text())
+        assert "detections" in d and "actions" in d
+    assert "203.0.113.50" in (s / "feeds" / "ipv4.txt").read_text()
+    assert json.loads((s / "feeds" / "stix.json").read_text())["type"] == "bundle"
+
+
+def test_prune(loaded):
+    from threatpulse.pipeline import prune
+    _, db, _ = loaded
+    db.conn.execute("INSERT INTO indicators (id,type,value,last_seen) VALUES ('old','ipv4','8.8.8.8','2000-01-01T00:00:00Z')")
+    assert prune(db, 90) >= 1 and not db.one("SELECT id FROM indicators WHERE id='old'")
