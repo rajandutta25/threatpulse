@@ -204,7 +204,8 @@ class FeodoTracker(Collector):
                 continue
             b.indicators.append(_ind("ipv4", ip, "Feodo Tracker", 90, malware=r.get("malware"),
                                      threat_type="botnet_c2", first_seen=_parse_date(r.get("first_seen")),
-                                     last_seen=_parse_date(r.get("last_online")),
+                                     # presence on Feodo's current blocklist means the C2 is active now
+                                     last_seen=_iso(datetime.now(UTC)),
                                      tags=[f"port:{r.get('port')}", str(r.get("status", ""))],
                                      reference="https://feodotracker.abuse.ch/browse/host/" + ip))
         return b
